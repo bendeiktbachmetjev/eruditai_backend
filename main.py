@@ -94,8 +94,6 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
         
         # Format prompt with request data
         prompt = prompt_template.format(
-            count=request.count,
-            bookTitle=request.bookTitle,
             highlightedText=request.highlightedText
         )
 
