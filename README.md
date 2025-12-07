@@ -1,10 +1,10 @@
 # Erudit AI Backend
 
-Backend API for generating flashcards using OpenAI. This service processes highlighted text from books and generates educational flashcards.
+Backend API for generating flashcards using Google Gemini. This service processes highlighted text from books and generates educational flashcards.
 
 ## Features
 
-- Generate flashcards from highlighted text using OpenAI GPT-3.5-turbo
+- Generate flashcards from highlighted text using Google Gemini 1.5 Flash
 - RESTful API with FastAPI
 - CORS enabled for cross-origin requests
 - Health check endpoints
@@ -21,7 +21,7 @@ pip install -r requirements.txt
 2. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Edit .env and add your GOOGLE_API_KEY
 ```
 
 3. Run the server:
@@ -33,7 +33,7 @@ The API will be available at `http://localhost:8000`
 
 ### Environment Variables
 
-- `OPENAI_API_KEY` (required): Your OpenAI API key
+- `GOOGLE_API_KEY` (required): Your Google Gemini API key (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
 - `PORT` (optional): Server port (defaults to 8000)
 
 ## API Endpoints
@@ -69,7 +69,7 @@ The API will be available at `http://localhost:8000`
 
 1. Push this code to GitHub
 2. Connect your GitHub repository to Railway
-3. Add environment variable `OPENAI_API_KEY` in Railway dashboard
+3. Add environment variable `GOOGLE_API_KEY` in Railway dashboard (get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey))
 4. Railway will automatically detect the Python project and deploy it
 5. The `Procfile` tells Railway how to run the application
 

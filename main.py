@@ -1,6 +1,6 @@
 """
 FastAPI Backend for Erudit AI Flashcard Generation
-Uses OpenAI API to generate flashcards from highlighted text
+Uses Google Gemini API to generate flashcards from highlighted text
 """
 
 from fastapi import FastAPI, HTTPException
@@ -11,7 +11,7 @@ import os
 import json
 import re
 import logging
-from openai import OpenAI
+import google.generativeai as genai
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="Erudit AI Backend",
-    description="Backend API for generating flashcards using OpenAI",
+    description="Backend API for generating flashcards using Google Gemini",
     version="1.0.0"
 )
 
@@ -33,17 +33,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI client
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    logger.warning("OPENAI_API_KEY not set. Please set it in environment variables.")
-
-# Initialize client - will be created when needed
-def get_openai_client():
-    """Get OpenAI client instance"""
-    if not openai_api_key:
-        return None
-    return OpenAI(api_key=openai_api_key)
+# Initialize Google Gemini
+google_api_key = os.getenv("GOOGLE_API_KEY")
+if not google_api_key:
+    logger.warning("GOOGLE_API_KEY not set. Please set it in environment variables.")
+else:
+    genai.configure(api_key=google_api_key)
 
 # Request/Response Models
 class GenerateFlashcardsRequest(BaseModel):
@@ -68,13 +63,12 @@ async def health():
 @app.post("/api/generate-flashcards", response_model=List[FlashcardResponse])
 async def generate_flashcards(request: GenerateFlashcardsRequest):
     """
-    Generate flashcards from highlighted text using OpenAI
+    Generate flashcards from highlighted text using Google Gemini
     """
-    client = get_openai_client()
-    if not client:
+    if not google_api_key:
         raise HTTPException(
             status_code=500,
-            detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
+            detail="Google API key not configured. Please set GOOGLE_API_KEY environment variable."
         )
     
     try:
@@ -97,25 +91,23 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
             highlightedText=request.highlightedText
         )
 
-        # Call OpenAI API
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Using gpt-4o-mini model
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a flashcard creation master. You create high-quality flashcards that help people memorize information. You MUST return ONLY valid JSON arrays, no markdown formatting, no code blocks, no explanations."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.7,
-            max_tokens=2000
+        # Prepare full prompt with system instruction
+        full_prompt = f"""You are a flashcard creation master. You create high-quality flashcards that help people memorize information. You MUST return ONLY valid JSON arrays, no markdown formatting, no code blocks, no explanations.
+
+{prompt}"""
+
+        # Call Google Gemini API
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(
+            full_prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=2000,
+            )
         )
         
         # Extract response content
-        content = response.choices[0].message.content.strip()
+        content = response.text.strip()
         
         # Clean up response (remove markdown code blocks if present)
         if content.startswith("```json"):
