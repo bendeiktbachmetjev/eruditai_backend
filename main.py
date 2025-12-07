@@ -97,8 +97,29 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
 {prompt}"""
 
         # Call Google Gemini API
-        # Using gemini-1.5-flash-001 (cheapest model, correct name format)
-        model = genai.GenerativeModel('gemini-1.5-flash-001')
+        # Try different model names (cheapest first)
+        model_names = ['gemini-1.5-flash-001', 'gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-pro']
+        model = None
+        last_error = None
+        
+        for model_name in model_names:
+            try:
+                model = genai.GenerativeModel(model_name)
+                # Test if model is available by trying to generate
+                test_response = model.generate_content("test", generation_config=genai.types.GenerationConfig(max_output_tokens=1))
+                logger.info(f"Using Gemini model: {model_name}")
+                break
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Model {model_name} not available: {e}")
+                continue
+        
+        if model is None:
+            raise HTTPException(
+                status_code=500,
+                detail=f"No available Gemini model found. Last error: {str(last_error)}"
+            )
+        
         response = model.generate_content(
             full_prompt,
             generation_config=genai.types.GenerationConfig(
