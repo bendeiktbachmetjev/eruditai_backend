@@ -97,9 +97,9 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
 {prompt}"""
 
         # Call Google Gemini API
+        # Using Gemini 2.5 models (older models are deprecated)
         # Try different model names (cheapest first)
-        # gemini-pro is the most stable and widely available
-        model_names = ['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash']
+        model_names = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash-exp']
         response = None
         last_error = None
         
