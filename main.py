@@ -97,8 +97,8 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
 {prompt}"""
 
         # Call Google Gemini API
-        # Using gemini-1.5-flash-latest (cheapest model)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # Using gemini-1.5-flash-001 (cheapest model, correct name format)
+        model = genai.GenerativeModel('gemini-1.5-flash-001')
         response = model.generate_content(
             full_prompt,
             generation_config=genai.types.GenerationConfig(
