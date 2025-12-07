@@ -128,6 +128,12 @@ Generate exactly {request.count} flashcards."""
             content = content[:-3]
         content = content.strip()
         
+        # Fix trailing commas in JSON (common issue with AI responses)
+        import re
+        # Remove trailing commas before closing brackets/braces
+        content = re.sub(r',\s*}', '}', content)
+        content = re.sub(r',\s*]', ']', content)
+        
         # Parse JSON response
         try:
             flashcards_data = json.loads(content)
