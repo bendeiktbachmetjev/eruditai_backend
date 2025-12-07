@@ -100,7 +100,7 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
         # Try different model names (cheapest first)
         # gemini-pro is the most stable and widely available
         model_names = ['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash']
-        model = None
+        response = None
         last_error = None
         
         for model_name in model_names:
@@ -122,7 +122,7 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
                 logger.warning(f"Model {model_name} failed: {str(e)}")
                 continue
         
-        if model is None or 'response' not in locals():
+        if response is None:
             raise HTTPException(
                 status_code=500,
                 detail=f"No available Gemini model found. Tried: {', '.join(model_names)}. Last error: {str(last_error)}"
