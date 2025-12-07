@@ -97,17 +97,24 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
 {prompt}"""
 
         # Call Google Gemini API
-        # Using Gemini 2.5 models (older models are deprecated)
-        # Try different model names (cheapest first)
-        model_names = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro']
-        response = None
-        last_error = None
-        
-        for model_name in model_names:
+        # Using cheapest model: gemini-2.5-flash-lite
+        model_name = 'gemini-2.5-flash-lite'
+        try:
+            model = genai.GenerativeModel(model_name)
+            logger.info(f"Using Gemini model: {model_name}")
+            response = model.generate_content(
+                full_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.7,
+                    max_output_tokens=2000,
+                )
+            )
+        except Exception as e:
+            logger.error(f"Model {model_name} failed: {str(e)}")
+            # Fallback to alternative if flash-lite is not available
+            logger.info("Trying fallback model: gemini-2.5-flash")
             try:
-                model = genai.GenerativeModel(model_name)
-                logger.info(f"Attempting to use Gemini model: {model_name}")
-                # Try to generate content to verify model works
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content(
                     full_prompt,
                     generation_config=genai.types.GenerationConfig(
@@ -115,18 +122,11 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
                         max_output_tokens=2000,
                     )
                 )
-                logger.info(f"Successfully using Gemini model: {model_name}")
-                break
-            except Exception as e:
-                last_error = e
-                logger.warning(f"Model {model_name} failed: {str(e)}")
-                continue
-        
-        if response is None:
-            raise HTTPException(
-                status_code=500,
-                detail=f"No available Gemini model found. Tried: {', '.join(model_names)}. Last error: {str(last_error)}"
-            )
+            except Exception as fallback_error:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Gemini API error. Tried {model_name} and gemini-2.5-flash. Last error: {str(fallback_error)}"
+                )
         
         # Extract response content
         content = response.text.strip()
