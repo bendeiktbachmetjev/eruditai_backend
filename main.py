@@ -37,14 +37,12 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     logger.warning("OPENAI_API_KEY not set. Please set it in environment variables.")
 
-# Initialize client lazily to avoid import errors
-client = None
-if openai_api_key:
-    try:
-        client = OpenAI(api_key=openai_api_key)
-    except Exception as e:
-        logger.error(f"Failed to initialize OpenAI client: {e}")
-        client = None
+# Initialize client - will be created when needed
+def get_openai_client():
+    """Get OpenAI client instance"""
+    if not openai_api_key:
+        return None
+    return OpenAI(api_key=openai_api_key)
 
 # Request/Response Models
 class GenerateFlashcardsRequest(BaseModel):
@@ -71,6 +69,7 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
     """
     Generate flashcards from highlighted text using OpenAI
     """
+    client = get_openai_client()
     if not client:
         raise HTTPException(
             status_code=500,
