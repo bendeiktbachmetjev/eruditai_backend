@@ -80,33 +80,32 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
     try:
         logger.info(f"Generating {request.count} flashcards for book: {request.bookTitle}")
         
-        # Create prompt for OpenAI
-        prompt = f"""Create exactly {request.count} high-quality flashcards based on the following text from the book "{request.bookTitle}".
-
-Highlighted Text:
-{request.highlightedText}
-
-Requirements for each flashcard:
-1. Question should be clear, concise, and test understanding of key concepts
-2. Answer should be detailed, accurate, and based directly on the highlighted text
-3. Focus on important facts, concepts, or insights
-4. Suitable for spaced repetition learning
-
-Return ONLY a valid JSON array in this exact format (no markdown, no code blocks, no additional text):
-[
-  {{"question": "Question text here", "answer": "Answer text here"}},
-  {{"question": "Question text here", "answer": "Answer text here"}}
-]
-
-Generate exactly {request.count} flashcards."""
+        # Load prompt template from file
+        prompt_template_path = os.path.join(os.path.dirname(__file__), "prompt_template.txt")
+        try:
+            with open(prompt_template_path, "r", encoding="utf-8") as f:
+                prompt_template = f.read()
+        except FileNotFoundError:
+            logger.error(f"Prompt template file not found at {prompt_template_path}")
+            raise HTTPException(
+                status_code=500,
+                detail="Prompt template file not found"
+            )
+        
+        # Format prompt with request data
+        prompt = prompt_template.format(
+            count=request.count,
+            bookTitle=request.bookTitle,
+            highlightedText=request.highlightedText
+        )
 
         # Call OpenAI API
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # Using cheaper model
+            model="gpt-4o-mini",  # Using gpt-4o-mini model
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert educational assistant. You create high-quality flashcards for studying. You MUST return ONLY valid JSON arrays, no markdown formatting, no code blocks, no explanations."
+                    "content": "You are a flashcard creation master. You create high-quality flashcards that help people memorize information. You MUST return ONLY valid JSON arrays, no markdown formatting, no code blocks, no explanations."
                 },
                 {
                     "role": "user",
