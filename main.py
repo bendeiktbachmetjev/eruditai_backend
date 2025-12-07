@@ -98,29 +98,35 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
 
         # Call Google Gemini API
         # Try different model names (cheapest first)
-        model_names = ['gemini-1.5-flash-001', 'gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-pro']
+        # gemini-pro is the most stable and widely available
+        model_names = ['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash']
         model = None
         last_error = None
         
         for model_name in model_names:
             try:
                 model = genai.GenerativeModel(model_name)
-                # Test if model is available by trying to generate
-                test_response = model.generate_content("test", generation_config=genai.types.GenerationConfig(max_output_tokens=1))
-                logger.info(f"Using Gemini model: {model_name}")
+                logger.info(f"Attempting to use Gemini model: {model_name}")
+                # Try to generate content to verify model works
+                response = model.generate_content(
+                    full_prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.7,
+                        max_output_tokens=2000,
+                    )
+                )
+                logger.info(f"Successfully using Gemini model: {model_name}")
                 break
             except Exception as e:
                 last_error = e
-                logger.warning(f"Model {model_name} not available: {e}")
+                logger.warning(f"Model {model_name} failed: {str(e)}")
                 continue
         
-        if model is None:
+        if model is None or 'response' not in locals():
             raise HTTPException(
                 status_code=500,
-                detail=f"No available Gemini model found. Last error: {str(last_error)}"
+                detail=f"No available Gemini model found. Tried: {', '.join(model_names)}. Last error: {str(last_error)}"
             )
-        
-        response = model.generate_content(
             full_prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.7,
