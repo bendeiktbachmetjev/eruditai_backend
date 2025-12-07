@@ -37,7 +37,14 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     logger.warning("OPENAI_API_KEY not set. Please set it in environment variables.")
 
-client = OpenAI(api_key=openai_api_key) if openai_api_key else None
+# Initialize client lazily to avoid import errors
+client = None
+if openai_api_key:
+    try:
+        client = OpenAI(api_key=openai_api_key)
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenAI client: {e}")
+        client = None
 
 # Request/Response Models
 class GenerateFlashcardsRequest(BaseModel):
