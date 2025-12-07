@@ -127,12 +127,6 @@ async def generate_flashcards(request: GenerateFlashcardsRequest):
                 status_code=500,
                 detail=f"No available Gemini model found. Tried: {', '.join(model_names)}. Last error: {str(last_error)}"
             )
-            full_prompt,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.7,
-                max_output_tokens=2000,
-            )
-        )
         
         # Extract response content
         content = response.text.strip()
