@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List
 import os
 import json
+import re
 import logging
 from openai import OpenAI
 
@@ -129,7 +130,6 @@ Generate exactly {request.count} flashcards."""
         content = content.strip()
         
         # Fix trailing commas in JSON (common issue with AI responses)
-        import re
         # Remove trailing commas before closing brackets/braces
         content = re.sub(r',\s*}', '}', content)
         content = re.sub(r',\s*]', ']', content)
